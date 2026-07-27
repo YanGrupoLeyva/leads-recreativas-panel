@@ -120,7 +120,7 @@ let types = new Set();
 
 async function loadLeads() {
   try {
-    const res = await fetch('leads.json');
+    const res = await fetch('leads.json?v=' + Date.now());
     const data = await res.json();
     allLeads = data.leads || [];
     document.getElementById('loading').style.display = 'none';
