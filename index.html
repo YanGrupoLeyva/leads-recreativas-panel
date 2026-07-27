@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leads Recreativas - Panel de Prospección</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root {
+  --primary:#1a5276; --primary-dark:#0e2a3a; --accent:#e74c3c;
+  --green:#27ae60; --orange:#f39c12; --red:#e74c3c; --gray:#95a5a6;
+  --bg:#f0f3f7; --card:#fff; --text:#1a1a2e; --text-light:#6b7280; --border:#e5e7eb;
+}
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+.header { background:var(--primary-dark); color:#fff; padding:20px 24px; }
+.header-content { max-width:1400px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.header h1 { font-size:1.5rem; font-weight:700; }
+.header .subtitle { font-size:0.8rem; opacity:0.7; }
+.stats-row { display:flex; gap:12px; flex-wrap:wrap; }
+.stat-chip { background:rgba(255,255,255,0.15); padding:6px 14px; border-radius:20px; font-size:0.78rem; font-weight:600; }
+.stat-chip strong { color:#5dade2; }
+.container { max-width:1400px; margin:0 auto; padding:24px; }
+.toolbar { background:var(--card); border-radius:12px; padding:16px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.06); display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+.toolbar input[type="text"] { flex:1; min-width:200px; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-size:0.9rem; font-family:inherit; }
+.toolbar input:focus { outline:none; border-color:var(--primary); }
+.filter-select { padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-size:0.85rem; font-family:inherit; cursor:pointer; background:#fff; }
+.btn { padding:10px 20px; border:none; border-radius:8px; font-size:0.85rem; font-weight:600; font-family:inherit; cursor:pointer; transition:all 0.15s; }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:var(--primary-dark); }
+.btn-export { background:var(--green); color:#fff; }
+.btn-export:hover { opacity:0.9; }
+.results-count { font-size:0.85rem; color:var(--text-light); font-weight:500; margin-left:auto; }
+.table-wrap { background:var(--card); border-radius:16px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+table { width:100%; border-collapse:collapse; }
+thead th { background:var(--primary-dark); color:#fff; padding:12px 14px; text-align:left; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; cursor:pointer; }
+thead th:hover { background:#082030; }
+tbody tr { border-bottom:1px solid var(--border); transition:background 0.1s; }
+tbody tr:hover { background:#f8fafe; }
+tbody td { padding:11px 14px; font-size:0.85rem; vertical-align:top; }
+.lead-name { font-weight:600; color:var(--text); }
+.lead-type { font-size:0.78rem; color:var(--text-light); margin-top:2px; }
+.phone-link { color:var(--primary); text-decoration:none; font-weight:500; }
+.phone-link:hover { text-decoration:underline; }
+.rating-badge { display:inline-flex; align-items:center; gap:3px; font-weight:600; font-size:0.82rem; }
+.rating-badge .star { color:#f5b800; }
+.rating-badge .reviews { color:var(--text-light); font-size:0.75rem; font-weight:400; }
+.status-select { padding:5px 10px; border:1.5px solid var(--border); border-radius:6px; font-size:0.78rem; font-family:inherit; cursor:pointer; font-weight:600; }
+status-nuevo { border-color:var(--primary); }
+.status-contactado { border-color:var(--orange); color:var(--orange); }
+.status-interesado { border-color:var(--green); color:var(--green); }
+.status-descartado { border-color:var(--gray); color:var(--gray); }
+.status-cerrado { border-color:var(--red); color:var(--red); }
+.city-tag { background:#eef2f7; padding:3px 8px; border-radius:6px; font-size:0.75rem; font-weight:500; }
+.loading { text-align:center; padding:60px; color:var(--text-light); }
+.loading .spinner { display:inline-block; width:32px; height:32px; border:3px solid rgba(26,82,118,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 0.7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.empty-state { text-align:center; padding:40px; color:var(--text-light); }
+.pagination { display:flex; justify-content:center; align-items:center; gap:8px; padding:16px; flex-wrap:wrap; }
+.pagination button { min-width:36px; height:36px; border:1.5px solid var(--border); border-radius:8px; background:#fff; font-size:0.85rem; font-weight:600; cursor:pointer; font-family:inherit; }
+.pagination button:hover:not(:disabled) { border-color:var(--primary); color:var(--primary); }
+.pagination button.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.pagination button:disabled { opacity:0.4; cursor:not-allowed; }
+.pagination .page-info { font-size:0.85rem; color:var(--text-light); margin:0 8px; }
+@media(max-width:768px) {
+  .header h1 { font-size:1.2rem; }
+  .container { padding:16px; }
+  .toolbar { flex-direction:column; align-items:stretch; }
+  .toolbar input, .filter-select, .btn { width:100%; }
+  .results-count { margin-left:0; text-align:right; }
+  .table-wrap { overflow-x:auto; }
+  table { min-width:900px; }
+  .stats-row { width:100%; justify-content:flex-start; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-content">
+    <div>
+      <h1>🎯 Leads Operadores Recreativas</h1>
+      <div class="subtitle">Base de datos de prospección — sector máquinas recreativas España</div>
+    </div>
+    <div class="stats-row" id="stats-row"></div>
+  </div>
+</div>
+<div class="container">
+  <div class="toolbar">
+    <input type="text" id="search-input" placeholder="Buscar por nombre, ciudad, teléfono..." oninput="applyFilters()">
+    <select class="filter-select" id="city-filter" onchange="applyFilters()"><option value="">Todas las ciudades</option></select>
+    <select class="filter-select" id="type-filter" onchange="applyFilters()"><option value="">Todo tipo negocio</option></select>
+    <select class="filter-select" id="status-filter" onchange="applyFilters()">
+      <option value="">Todos estados</option>
+      <option value="nuevo">Nuevo</option>
+      <option value="contactado">Contactado</option>
+      <option value="interesado">Interesado</option>
+      <option value="descartado">Descartado</option>
+      <option value="cerrado">Cerrado</option>
+    </select>
+    <button class="btn btn-export" onclick="exportCSV()">📊 Exportar CSV</button>
+    <span class="results-count" id="results-count"></span>
+  </div>
+  <div class="table-wrap">
+    <div class="loading" id="loading"><div class="spinner"></div><p style="margin-top:12px;">Cargando leads...</p></div>
+    <table style="display:none;" id="table">
+      <thead><tr>
+        <th>Empresa</th>
+        <th>Tipo negocio</th>
+        <th>Ciudad</th>
+        <th>Teléfono</th>
+        <th>Rating</th>
+        <th>Estado</th>
+        <th>Keyword</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+<script>
+const API_URL = 'https://cr-f031ec38.base44.app/functions/leadsRecreativas';
+const PER_PAGE = 25;
+let allLeads = [];
+let filteredLeads = [];
+let currentPage = 1;
+let cities = new Set();
+let types = new Set();
+
+async function loadLeads() {
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    allLeads = data.leads || [];
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('table').style.display = 'table';
+    // Populate filters
+    allLeads.forEach(l => {
+      if (l.city) cities.add(l.city);
+      if (l.business_type) types.add(l.business_type);
+    });
+    const citySel = document.getElementById('city-filter');
+    Array.from(cities).sort().forEach(c => { const o=document.createElement('option'); o.value=c; o.textContent=c; citySel.appendChild(o); });
+    const typeSel = document.getElementById('type-filter');
+    Array.from(types).sort().forEach(t => { const o=document.createElement('option'); o.value=t; o.textContent=t; typeSel.appendChild(o); });
+    // Stats
+    const stats = { total: allLeads.length, nuevo: 0, contactado: 0, interesado: 0, cerrado: 0 };
+    allLeads.forEach(l => { if (stats[l.lead_status] !== undefined) stats[l.lead_status]++; });
+    document.getElementById('stats-row').innerHTML = 
+      '<span class="stat-chip">Total: <strong>' + stats.total + '</strong></span>' +
+      '<span class="stat-chip">Nuevos: <strong style="color:#5dade2">' + stats.nuevo + '</strong></span>' +
+      '<span class="stat-chip">Contactados: <strong style="color:#f5b800">' + stats.contactado + '</strong></span>' +
+      '<span class="stat-chip">Interesados: <strong style="color:#58d68d">' + stats.interesado + '</strong></span>' +
+      '<span class="stat-chip">Cerrados: <strong style="color:#ec7063">' + stats.cerrado + '</strong></span>';
+    applyFilters();
+  } catch (e) {
+    document.getElementById('loading').innerHTML = '<p>❌ Error: ' + e.message + '</p>';
+  }
+}
+
+function applyFilters() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const city = document.getElementById('city-filter').value;
+  const type = document.getElementById('type-filter').value;
+  const status = document.getElementById('status-filter').value;
+  filteredLeads = allLeads.filter(l => {
+    const matchSearch = !search || (l.name||'').toLowerCase().includes(search) || (l.city||'').toLowerCase().includes(search) || (l.phone||'').toLowerCase().includes(search) || (l.business_type||'').toLowerCase().includes(search);
+    const matchCity = !city || l.city === city;
+    const matchType = !type || l.business_type === type;
+    const matchStatus = !status || l.lead_status === status;
+    return matchSearch && matchCity && matchType && matchStatus;
+  });
+  currentPage = 1;
+  renderPage();
+}
+
+function renderPage() {
+  const total = filteredLeads.length;
+  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+  if (currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * PER_PAGE;
+  const pageLeads = filteredLeads.slice(start, start + PER_PAGE);
+  
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  
+  if (pageLeads.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-light);">No se encontraron leads</td></tr>';
+  } else {
+    pageLeads.forEach(l => {
+      const tr = document.createElement('tr');
+      const ratingHtml = l.rating ? '<span class="rating-badge"><span class="star">★</span> ' + l.rating + (l.reviews_count ? ' <span class="reviews">(' + l.reviews_count + ' reseñas)</span>' : '') + '</span>' : '<span style="color:var(--text-light);">—</span>';
+      tr.innerHTML = 
+        '<td><div class="lead-name">' + escHtml(l.name||'') + '</div><div class="lead-type">' + escHtml(l.address||'') + '</div>' + (l.website ? '<a href="' + escHtml(l.website.startsWith('http') ? l.website : 'https://' + l.website) + '" target="_blank" style="font-size:0.75rem;color:var(--primary);">' + escHtml(l.website) + '</a>' : '') + '</td>' +
+        '<td>' + escHtml(l.business_type||'—') + '</td>' +
+        '<td><span class="city-tag">' + escHtml(l.city||l.province||'—') + '</span></td>' +
+        '<td>' + (l.phone ? '<a href="tel:' + escHtml(l.phone) + '" class="phone-link">' + escHtml(l.phone) + '</a>' : '—') + '</td>' +
+        '<td>' + ratingHtml + '</td>' +
+        '<td><select class="status-select" onchange="updateStatus(\'' + l.id + '\', this.value)" style="color:var(--' + (l.lead_status||'gray') + ');"><option value="nuevo"' + (l.lead_status==='nuevo'?'selected':'') + '>Nuevo</option><option value="contactado"' + (l.lead_status==='contactado'?'selected':'') + '>Contactado</option><option value="interesado"' + (l.lead_status==='interesado'?'selected':'') + '>Interesado</option><option value="descartado"' + (l.lead_status==='descartado'?'selected':'') + '>Descartado</option><option value="cerrado"' + (l.lead_status==='cerrado'?'selected':'') + '>Cerrado</option></select></td>' +
+        '<td style="font-size:0.75rem;color:var(--text-light);">' + escHtml(l.search_keyword||'') + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+  
+  // Pagination
+  const pagDiv = document.getElementById('pagination');
+  if (totalPages <= 1) {
+    pagDiv.innerHTML = '<span class="page-info">' + total + ' leads</span>';
+  } else {
+    let html = '<button data-page="1"' + (currentPage===1?' disabled':'') + '>«</button>';
+    html += '<button data-page="' + (currentPage-1) + '"' + (currentPage===1?' disabled':'') + '>‹</button>';
+    let sp = Math.max(1, currentPage-3), ep = Math.min(totalPages, sp+6);
+    if (ep-sp<6) sp = Math.max(1, ep-6);
+    if (sp>1) html += '<span class="page-info">...</span>';
+    for (let i=sp; i<=ep; i++) html += '<button data-page="' + i + '"' + (i===currentPage?' class="active"':'') + '>' + i + '</button>';
+    if (ep<totalPages) html += '<span class="page-info">...</span>';
+    html += '<button data-page="' + (currentPage+1) + '"' + (currentPage===totalPages?' disabled':'') + '>›</button>';
+    html += '<button data-page="' + totalPages + '"' + (currentPage===totalPages?' disabled':'') + '>»</button>';
+    html += '<span class="page-info">' + total + ' leads · Pág ' + currentPage + '/' + totalPages + '</span>';
+    pagDiv.innerHTML = html;
+  }
+  document.getElementById('results-count').textContent = total + ' leads';
+}
+
+// Event delegation for pagination
+document.getElementById('pagination').addEventListener('click', function(e) {
+  if (e.target.tagName === 'BUTTON' && e.target.hasAttribute('data-page')) {
+    const page = parseInt(e.target.getAttribute('data-page'), 10);
+    if (page >= 1 && page !== currentPage) {
+      currentPage = page;
+      renderPage();
+      document.querySelector('.table-wrap').scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+  }
+});
+
+async function updateStatus(id, status) {
+  try {
+    await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update_status', id, status })
+    });
+    // Update local data
+    const lead = allLeads.find(l => l.id === id);
+    if (lead) lead.lead_status = status;
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+function exportCSV() {
+  const headers = ['Nombre', 'Tipo negocio', 'Ciudad', 'Provincia', 'Direccion', 'Telefono', 'Website', 'Rating', 'Reseñas', 'Estado', 'Keyword'];
+  const rows = filteredLeads.map(l => [l.name, l.business_type, l.city, l.province, l.address, l.phone, l.website, l.rating, l.reviews_count, l.lead_status, l.search_keyword]);
+  const csv = [headers, ...rows].map(r => r.map(c => '"' + String(c||'').replace(/"/g, '""') + '"').join(',')).join('\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'leads-recreativas-' + new Date().toISOString().split('T')[0] + '.csv';
+  link.click();
+}
+
+function escHtml(text) { const d = document.createElement('div'); d.textContent = text||''; return d.innerHTML; }
+
+loadLeads();
+</script>
+</body>
+</html>
