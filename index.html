@@ -18,7 +18,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .header-content { max-width:1400px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
 .header h1 { font-size:1.5rem; font-weight:700; }
 .header .subtitle { font-size:0.8rem; opacity:0.7; }
-.stats-row { display:flex; gap:12px; flex-wrap:wrap; }
+.stats-row { display:flex; gap:8px; flex-wrap:wrap; }
 .stat-chip { background:rgba(255,255,255,0.15); padding:6px 14px; border-radius:20px; font-size:0.78rem; font-weight:600; }
 .stat-chip strong { color:#5dade2; }
 .container { max-width:1400px; margin:0 auto; padding:24px; }
@@ -27,15 +27,12 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); 
 .toolbar input:focus { outline:none; border-color:var(--primary); }
 .filter-select { padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-size:0.85rem; font-family:inherit; cursor:pointer; background:#fff; }
 .btn { padding:10px 20px; border:none; border-radius:8px; font-size:0.85rem; font-weight:600; font-family:inherit; cursor:pointer; transition:all 0.15s; }
-.btn-primary { background:var(--primary); color:#fff; }
-.btn-primary:hover { background:var(--primary-dark); }
 .btn-export { background:var(--green); color:#fff; }
 .btn-export:hover { opacity:0.9; }
 .results-count { font-size:0.85rem; color:var(--text-light); font-weight:500; margin-left:auto; }
 .table-wrap { background:var(--card); border-radius:16px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
 table { width:100%; border-collapse:collapse; }
-thead th { background:var(--primary-dark); color:#fff; padding:12px 14px; text-align:left; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; cursor:pointer; }
-thead th:hover { background:#082030; }
+thead th { background:var(--primary-dark); color:#fff; padding:12px 14px; text-align:left; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; }
 tbody tr { border-bottom:1px solid var(--border); transition:background 0.1s; }
 tbody tr:hover { background:#f8fafe; }
 tbody td { padding:11px 14px; font-size:0.85rem; vertical-align:top; }
@@ -47,11 +44,6 @@ tbody td { padding:11px 14px; font-size:0.85rem; vertical-align:top; }
 .rating-badge .star { color:#f5b800; }
 .rating-badge .reviews { color:var(--text-light); font-size:0.75rem; font-weight:400; }
 .status-select { padding:5px 10px; border:1.5px solid var(--border); border-radius:6px; font-size:0.78rem; font-family:inherit; cursor:pointer; font-weight:600; }
-status-nuevo { border-color:var(--primary); }
-.status-contactado { border-color:var(--orange); color:var(--orange); }
-.status-interesado { border-color:var(--green); color:var(--green); }
-.status-descartado { border-color:var(--gray); color:var(--gray); }
-.status-cerrado { border-color:var(--red); color:var(--red); }
 .city-tag { background:#eef2f7; padding:3px 8px; border-radius:6px; font-size:0.75rem; font-weight:500; }
 .loading { text-align:center; padding:60px; color:var(--text-light); }
 .loading .spinner { display:inline-block; width:32px; height:32px; border:3px solid rgba(26,82,118,0.2); border-top-color:var(--primary); border-radius:50%; animation:spin 0.7s linear infinite; }
@@ -119,7 +111,6 @@ status-nuevo { border-color:var(--primary); }
   </div>
 </div>
 <script>
-const API_URL = 'https://cr-f031ec38.base44.app/functions/leadsRecreativas';
 const PER_PAGE = 25;
 let allLeads = [];
 let filteredLeads = [];
@@ -129,12 +120,11 @@ let types = new Set();
 
 async function loadLeads() {
   try {
-    const res = await fetch(API_URL);
+    const res = await fetch('leads.json');
     const data = await res.json();
     allLeads = data.leads || [];
     document.getElementById('loading').style.display = 'none';
     document.getElementById('table').style.display = 'table';
-    // Populate filters
     allLeads.forEach(l => {
       if (l.city) cities.add(l.city);
       if (l.business_type) types.add(l.business_type);
@@ -143,7 +133,6 @@ async function loadLeads() {
     Array.from(cities).sort().forEach(c => { const o=document.createElement('option'); o.value=c; o.textContent=c; citySel.appendChild(o); });
     const typeSel = document.getElementById('type-filter');
     Array.from(types).sort().forEach(t => { const o=document.createElement('option'); o.value=t; o.textContent=t; typeSel.appendChild(o); });
-    // Stats
     const stats = { total: allLeads.length, nuevo: 0, contactado: 0, interesado: 0, cerrado: 0 };
     allLeads.forEach(l => { if (stats[l.lead_status] !== undefined) stats[l.lead_status]++; });
     document.getElementById('stats-row').innerHTML = 
@@ -180,10 +169,8 @@ function renderPage() {
   if (currentPage > totalPages) currentPage = totalPages;
   const start = (currentPage - 1) * PER_PAGE;
   const pageLeads = filteredLeads.slice(start, start + PER_PAGE);
-  
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
-  
   if (pageLeads.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-light);">No se encontraron leads</td></tr>';
   } else {
@@ -196,13 +183,11 @@ function renderPage() {
         '<td><span class="city-tag">' + escHtml(l.city||l.province||'—') + '</span></td>' +
         '<td>' + (l.phone ? '<a href="tel:' + escHtml(l.phone) + '" class="phone-link">' + escHtml(l.phone) + '</a>' : '—') + '</td>' +
         '<td>' + ratingHtml + '</td>' +
-        '<td><select class="status-select" onchange="updateStatus(\'' + l.id + '\', this.value)" style="color:var(--' + (l.lead_status||'gray') + ');"><option value="nuevo"' + (l.lead_status==='nuevo'?'selected':'') + '>Nuevo</option><option value="contactado"' + (l.lead_status==='contactado'?'selected':'') + '>Contactado</option><option value="interesado"' + (l.lead_status==='interesado'?'selected':'') + '>Interesado</option><option value="descartado"' + (l.lead_status==='descartado'?'selected':'') + '>Descartado</option><option value="cerrado"' + (l.lead_status==='cerrado'?'selected':'') + '>Cerrado</option></select></td>' +
+        '<td><select class="status-select" onchange="updateStatus(' + l.id + ', this.value)"><option value="nuevo"' + (l.lead_status==='nuevo'?'selected':'') + '>Nuevo</option><option value="contactado"' + (l.lead_status==='contactado'?'selected':'') + '>Contactado</option><option value="interesado"' + (l.lead_status==='interesado'?'selected':'') + '>Interesado</option><option value="descartado"' + (l.lead_status==='descartado'?'selected':'') + '>Descartado</option><option value="cerrado"' + (l.lead_status==='cerrado'?'selected':'') + '>Cerrado</option></select></td>' +
         '<td style="font-size:0.75rem;color:var(--text-light);">' + escHtml(l.search_keyword||'') + '</td>';
       tbody.appendChild(tr);
     });
   }
-  
-  // Pagination
   const pagDiv = document.getElementById('pagination');
   if (totalPages <= 1) {
     pagDiv.innerHTML = '<span class="page-info">' + total + ' leads</span>';
@@ -222,7 +207,6 @@ function renderPage() {
   document.getElementById('results-count').textContent = total + ' leads';
 }
 
-// Event delegation for pagination
 document.getElementById('pagination').addEventListener('click', function(e) {
   if (e.target.tagName === 'BUTTON' && e.target.hasAttribute('data-page')) {
     const page = parseInt(e.target.getAttribute('data-page'), 10);
@@ -234,17 +218,9 @@ document.getElementById('pagination').addEventListener('click', function(e) {
   }
 });
 
-async function updateStatus(id, status) {
-  try {
-    await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update_status', id, status })
-    });
-    // Update local data
-    const lead = allLeads.find(l => l.id === id);
-    if (lead) lead.lead_status = status;
-  } catch (e) { alert('Error: ' + e.message); }
+function updateStatus(id, status) {
+  const lead = allLeads.find(l => l.id == id);
+  if (lead) lead.lead_status = status;
 }
 
 function exportCSV() {
